@@ -9,18 +9,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.umer.pocketsage.ui.theme.PocketSageTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             PocketSageTheme {
+                val viewModel: HelloViewModel = hiltViewModel()
+                val message by viewModel.message.collectAsState()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
                         contentAlignment = Alignment.Center,
@@ -28,23 +33,10 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        Text(text = "PocketSage")
+                        Text(text = message)
                     }
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    PocketSageTheme {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(text = "PocketSage")
         }
     }
 }
