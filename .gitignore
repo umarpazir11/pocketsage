@@ -1,10 +1,39 @@
-*.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
+# Built outputs
 /build
-/captures
-.externalNativeBuild
-.cxx
+**/build/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+gradle-wrapper.jar
 local.properties
+
+# Android Studio / IntelliJ IDEA
+*.iml
+/.idea/
+.idea/
+*.idea/
+*.orig
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# Profiling / captures
+/captures/
+
+# Kotlin incremental compilation
+kotlin/
+
+# Signing keys — never commit these
+*.jks
+*.keystore
+keystore.properties
