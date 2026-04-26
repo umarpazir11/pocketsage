@@ -18,6 +18,7 @@ local.properties
 .idea/
 *.idea/
 *.orig
+.claude/
 
 # OS
 .DS_Store
