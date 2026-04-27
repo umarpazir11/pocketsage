@@ -35,7 +35,8 @@ Thumbs.db
 kotlin/
 
 # Model assets — large files, download separately (see README Models section)
-app/src/main/assets/embedding/
+*.tflite
+*.txt
 
 # Signing keys — never commit these
 *.jks
