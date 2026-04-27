@@ -31,12 +31,9 @@ Thumbs.db
 # Profiling / captures
 /captures/
 
-# Kotlin incremental compilation
-kotlin/
-
 # Model assets — large files, download separately (see README Models section)
 *.tflite
-*.txt
+*.bin
 
 # Signing keys — never commit these
 *.jks
