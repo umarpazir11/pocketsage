@@ -2,6 +2,7 @@ package com.umer.pocketsage
 
 import android.app.Application
 import android.util.Log
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.umer.pocketsage.data.embedding.AssetLoader
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -13,6 +14,7 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        PDFBoxResourceLoader.init(applicationContext)
         smokeTestAssets()
     }
 
