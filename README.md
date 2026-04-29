@@ -70,6 +70,32 @@ Three clean layers throughout: `data/` owns persistence and ML runtimes, `domain
 | LLM | MediaPipe `LlmInference` + Gemma 2B | Google's official on-device LLM API. INT4 quant. |
 | Async | Coroutines + Flow | Streaming tokens map cleanly onto `callbackFlow`. |
 
+## Models
+
+Neither model is checked into the repo — both are large and carry their own licenses.
+
+### Embedding model (`all-MiniLM-L6-v2`)
+
+| File | Size | License |
+|---|---|---|
+| `all-MiniLM-L6-v2.tflite` | ~22 MB | Apache 2.0 |
+| `vocab.txt` | ~226 KB | Apache 2.0 |
+
+Download the INT8-quantised TFLite conversion from the [Hugging Face model page](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) (community TFLite build: [`Nihal2000/all-MiniLM-L6-v2-quant.tflite`](https://huggingface.co/Nihal2000/all-MiniLM-L6-v2-quant.tflite)).
+
+Place both files at:
+
+```
+app/src/main/assets/embedding/all-MiniLM-L6-v2.tflite
+app/src/main/assets/embedding/vocab.txt
+```
+
+### LLM (`gemma2b.task`)
+
+Download `gemma2b.task` (~1.3 GB) from [Kaggle — MediaPipe Gemma](https://www.kaggle.com/models/google/gemma/frameworks/tfLite). Side-load it onto your device; PocketSage's first-run screen lets you pick the file and copies it into app-private storage. See [Gemma terms of use](https://ai.google.dev/gemma/terms) before redistributing.
+
+---
+
 ## How RAG works here, in three paragraphs
 
 When you add a PDF, PocketSage extracts the text, splits it into ~800-character overlapping chunks, embeds each chunk with a tiny BERT-family model (MiniLM), and stores the resulting 384-dimensional vectors as raw bytes in a Room table. This step is one-time per document and runs in the background with progress reported to the UI.
@@ -85,10 +111,7 @@ git clone https://github.com/umerdilpazir/pocketsage.git
 cd pocketsage
 ```
 
-You need two model files that aren't checked into the repo (they're large and have their own licenses):
-
-1. **Embedding model** — download `all-MiniLM-L6-v2.tflite` (~22 MB) from [the Hugging Face model card](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) along with `vocab.txt`. Place both at `app/src/main/assets/embedding/`.
-2. **LLM** — download `gemma2b.task` (~1.3 GB) from [Kaggle's MediaPipe Gemma page](https://www.kaggle.com/models/google/gemma/frameworks/tfLite). Side-load the file onto your device; PocketSage's first-run screen will let you pick it from the file system and copy it into app-private storage.
+Download the required model files first — see [Models](#models) for exact filenames and placement.
 
 Then:
 
