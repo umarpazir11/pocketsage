@@ -1,6 +1,8 @@
 package com.umer.pocketsage.data.pdf
 
-class Chunker {
+import javax.inject.Inject
+
+class Chunker @Inject constructor() {
     fun chunk(text: String, size: Int = 800, overlap: Int = 120): List<String> {
         if (text.isBlank()) return emptyList()
         val step = size - overlap
