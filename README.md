@@ -92,7 +92,42 @@ app/src/main/assets/embedding/vocab.txt
 
 ### LLM (`gemma2b.task`)
 
-Download `gemma2b.task` (~1.3 GB) from [Kaggle — MediaPipe Gemma](https://www.kaggle.com/models/google/gemma/frameworks/tfLite). Side-load it onto your device; PocketSage's first-run screen lets you pick the file and copies it into app-private storage. See [Gemma terms of use](https://ai.google.dev/gemma/terms) before redistributing.
+| File | Size | License |
+|---|---|---|
+| `gemma2b.task` | ~1.3 GB | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
+
+The model is **not bundled in the APK**. You download it once and PocketSage copies it into app-private storage at first launch.
+
+#### Step 1 — Download
+
+Go to [Kaggle → Google → Gemma → TFLite](https://www.kaggle.com/models/google/gemma/frameworks/tfLite/variations/gemma-2b-it-gpu-int4) and download `gemma-2b-it-gpu-int4.bin` (also listed as `gemma2b.task` in some releases). You need a free Kaggle account and to accept the Gemma licence.
+
+Alternatively, the MediaPipe release page ships the same artefact:
+[ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android](https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android)
+
+Rename the downloaded file to `gemma2b.task`.
+
+#### Step 2 — Transfer to the device (pick one method)
+
+**Option A — ADB push (recommended for development)**
+
+```bash
+adb push gemma2b.task /sdcard/Download/gemma2b.task
+```
+
+**Option B — USB file transfer / Google Drive / USB drive**
+
+Copy the file to any location your device's Files app can see (e.g. `Downloads`).
+
+#### Step 3 — In-app import
+
+1. Launch PocketSage. The gate screen appears automatically when no model is present.
+2. Tap **Pick gemma2b.task**.
+3. Navigate to the file using the system file picker and select it.
+4. A progress bar shows while the file is copied into app-private storage (`filesDir/models/gemma2b.task`). The original file in `Downloads` can be deleted afterwards.
+5. Once the copy finishes, the main app loads automatically.
+
+The model is stored in the app's private sandbox — no other app can read it and it is removed when the app is uninstalled.
 
 ---
 

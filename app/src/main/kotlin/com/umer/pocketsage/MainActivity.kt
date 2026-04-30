@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umer.pocketsage.ui.modelgate.ModelGate
 import com.umer.pocketsage.ui.theme.PocketSageTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -24,16 +25,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PocketSageTheme {
-                val viewModel: HelloViewModel = hiltViewModel()
-                val message by viewModel.message.collectAsState()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        Text(text = message)
+                ModelGate {
+                    val viewModel: HelloViewModel = hiltViewModel()
+                    val message by viewModel.message.collectAsState()
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                        ) {
+                            Text(text = message)
+                        }
                     }
                 }
             }
