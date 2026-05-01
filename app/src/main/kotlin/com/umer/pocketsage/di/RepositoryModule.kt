@@ -3,6 +3,8 @@ package com.umer.pocketsage.di
 import com.umer.pocketsage.data.repository.DocumentRepositoryImpl
 import com.umer.pocketsage.data.repository.RetrieverImpl
 import com.umer.pocketsage.domain.DocumentRepository
+import com.umer.pocketsage.domain.RagPipeline
+import com.umer.pocketsage.domain.RagPipelineImpl
 import com.umer.pocketsage.domain.Retriever
 import dagger.Binds
 import dagger.Module
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindRetriever(impl: RetrieverImpl): Retriever
+
+    @Binds
+    @Singleton
+    abstract fun bindRagPipeline(impl: RagPipelineImpl): RagPipeline
 }
