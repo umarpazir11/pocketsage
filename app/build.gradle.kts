@@ -69,6 +69,9 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
+    // Material icons (Send, etc.)
+    implementation("androidx.compose.material:material-icons-extended")
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
