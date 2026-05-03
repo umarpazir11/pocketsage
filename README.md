@@ -170,8 +170,8 @@ Tap **+** on the Library screen to import a PDF. Once ingestion completes, tap t
 
 ## Screenshots
 
-| Library | Model Import                                       | Chat                                |
-|---|----------------------------------------------------|-------------------------------------|---|
+| Library | Model Import                                       | Chat                               |
+|---|----------------------------------------------------|-------------------------------------|
 | ![Library Screen](docs/screenshots/library.png) | ![Model Import](docs/screenshots/model-import.gif) | ![Chat&Sources](docs/screenshots/chat.png) |
 | Managing local PDF documents | One-time model provisioning                        | Streaming LLM responses |
 
