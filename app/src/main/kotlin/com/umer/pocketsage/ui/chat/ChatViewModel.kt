@@ -73,7 +73,11 @@ class ChatViewModel @Inject constructor(
                     is RagEvent.Retrieving -> _isGenerating.value = true
                     is RagEvent.Retrieved -> updateLastAssistant { it.copy(sources = event.sources) }
                     is RagEvent.Token -> updateLastAssistant { it.copy(text = it.text + event.text) }
-                    is RagEvent.Completed, is RagEvent.Error -> _isGenerating.value = false
+                    is RagEvent.Completed -> _isGenerating.value = false
+                    is RagEvent.Error -> {
+                        updateLastAssistant { it.copy(text = "Could not generate a response. Please try again.") }
+                        _isGenerating.value = false
+                    }
                 }
             }
         }

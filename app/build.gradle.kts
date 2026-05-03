@@ -47,7 +47,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
         jniLibs {
-            // MediaPipe and TFLite both bundle some of the same native libs
             pickFirsts += "**/*.so"
         }
     }
@@ -85,12 +84,12 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
-    // MediaPipe LLM
-    implementation(libs.mediapipe.tasks.genai)
+    // LiteRT-LM
+    implementation(libs.litertlm)
 
-    // TFLite
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.support)
+    // LiteRT (replaces TFLite)
+    implementation(libs.litert)
+    implementation(libs.litert.support)
 
     // PDFBox
     implementation(libs.pdfbox.android)

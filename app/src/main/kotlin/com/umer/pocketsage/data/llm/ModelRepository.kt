@@ -19,7 +19,7 @@ class ModelRepository @Inject constructor(
     @ApplicationContext private val ctx: Context
 ) {
     private val modelFile: File
-        get() = File(ctx.filesDir, "models/gemma2b.task")
+        get() = File(ctx.filesDir, "models/gemma2b.litertlm")
 
     private val _importProgress = MutableStateFlow(0f)
     val importProgress: StateFlow<Float> = _importProgress.asStateFlow()
@@ -34,7 +34,7 @@ class ModelRepository @Inject constructor(
 
             val destDir = File(ctx.filesDir, "models").also { it.mkdirs() }
             // Write to a temp file so a partial copy is never mistaken for a valid model.
-            val tmp = File(destDir, "gemma2b.task.tmp")
+            val tmp = File(destDir, "gemma2b.litertlm.tmp")
 
             val totalBytes = queryFileSize(uri)
             var copiedBytes = 0L
