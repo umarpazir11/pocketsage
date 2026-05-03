@@ -14,6 +14,7 @@
 ## Why this exists
 
 Most "AI on Android" are thin wrappers around cloud APIs. PocketSage runs the **entire RAG pipeline on the device** — embeddings, vector search, and LLM inference all happen locally on your Android phone. Airplane mode works. Your documents stay on your hardware. The model weights live in your app sandbox.
+
 ---
 
 ## Features
