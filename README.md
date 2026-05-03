@@ -6,7 +6,7 @@
 Ask questions about any PDF — your data never leaves the phone.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Min SDK](https://img.shields.io/badge/Min%20SDK-26-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 [![Build](https://img.shields.io/github/actions/workflow/status/umerdilpazir/pocketsage/android.yml?branch=main)](../../actions)
@@ -29,8 +29,8 @@ It's also a working reference for **Modern Android Development (MAD Skills)** do
 
 - **100% offline** — no network calls, ever. Verified by Android's network restrictions.
 - **PDF ingestion** — pick any PDF from your device; PocketSage extracts, chunks, and embeds it locally.
-- **Semantic search** — TFLite `all-MiniLM-L6-v2` produces 384-dim embeddings stored as BLOBs in Room.
-- **On-device LLM** — Gemma 2B (INT4, ~1.3 GB) running through MediaPipe's `LlmInference` API.
+- **Semantic search** — LiteRT `all-MiniLM-L6-v2` produces 384-dim embeddings stored as BLOBs in Room.
+- **On-device LLM** — Gemma 2B (INT4, ~1.3 GB) running through Google's `LiteRT-LM` (`litertlm-android`) API.
 - **Streaming answers** — tokens stream into the UI as they're generated, with retrieved sources shown alongside each answer.
 - **Private by design** — model weights and document embeddings live only in your app's sandbox storage.
 
@@ -41,7 +41,7 @@ flowchart LR
     subgraph Ingestion
         A[PDF picked via SAF] --> B[PdfBox text extraction]
         B --> C[Chunker<br/>800 chars / 120 overlap]
-        C --> D[MiniLM TFLite<br/>384-dim embedding]
+        C --> D[MiniLM via LiteRT<br/>384-dim embedding]
         D --> E[(Room: chunks + BLOB)]
     end
 
@@ -50,7 +50,7 @@ flowchart LR
         QE --> R[Cosine top-K<br/>over Room]
         E --> R
         R --> P[Prompt template]
-        P --> L[MediaPipe Gemma 2B]
+        P --> L[LiteRT-LM Gemma 2B]
         L --> S[Streamed tokens<br/>+ source chunks]
     end
 ```
@@ -63,12 +63,16 @@ Three clean layers throughout: `data/` owns persistence and ML runtimes, `domain
 | --- | --- | --- |
 | UI | Jetpack Compose + Material 3 | The MAD Skills default; dynamic color on API 31+. |
 | Architecture | MVVM, single Activity, Navigation Compose | Standard, testable, recruiter-recognisable. |
-| DI | Hilt | First-party, less boilerplate than Dagger. |
-| Persistence | Room (SQLite) | Embeddings stored as `BLOB`; cosine in Kotlin. |
-| Embeddings | `all-MiniLM-L6-v2` via TFLite | 22 MB, 384-dim, well-benchmarked, runs anywhere. |
+| DI | Hilt 2.58 | First-party, less boilerplate than Dagger. |
+| Persistence | Room 2.7.1 (SQLite) | Embeddings stored as `BLOB`; cosine in Kotlin. |
+| Embeddings | `all-MiniLM-L6-v2` via **LiteRT 1.4.0** | 22 MB, 384-dim, well-benchmarked, runs anywhere. |
 | PDF parsing | `pdfbox-android` | Mature port; handles most consumer PDFs. |
-| LLM | MediaPipe `LlmInference` + Gemma 2B | Google's official on-device LLM API. INT4 quant. |
+| LLM | **LiteRT-LM (`litertlm-android` 0.10.2)** + Gemma 2B | Google's current on-device LLM API. INT4 quant. |
 | Async | Coroutines + Flow | Streaming tokens map cleanly onto `callbackFlow`. |
+
+> **LiteRT** is Google's rebranding of TensorFlow Lite. The Maven coordinates changed (`com.google.ai.edge.litert`), but all Kotlin/Java classes remain in the `org.tensorflow.lite.*` packages in v1.4.0.
+>
+> **LiteRT-LM** (`litertlm-android`) is Google's replacement for MediaPipe `tasks-genai`. It uses an `Engine` + `Session` API for streaming token generation.
 
 ## Models
 
@@ -90,29 +94,26 @@ app/src/main/assets/embedding/all-MiniLM-L6-v2.tflite
 app/src/main/assets/embedding/vocab.txt
 ```
 
-### LLM (`gemma2b.task`)
+### LLM (`gemma2b.litertlm`)
 
 | File | Size | License |
 |---|---|---|
-| `gemma2b.task` | ~1.3 GB | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
+| `gemma2b.litertlm` | ~1.3 GB | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
 
 The model is **not bundled in the APK**. You download it once and PocketSage copies it into app-private storage at first launch.
 
 #### Step 1 — Download
 
-Go to [Kaggle → Google → Gemma → TFLite](https://www.kaggle.com/models/google/gemma/frameworks/tfLite/variations/gemma-2b-it-gpu-int4) and download `gemma-2b-it-gpu-int4.bin` (also listed as `gemma2b.task` in some releases). You need a free Kaggle account and to accept the Gemma licence.
+Go to [ai.google.dev/edge/litert-lm/android](https://ai.google.dev/edge/litert-lm/android) and download the Gemma 2B LiteRT-LM model (`.litertlm` format). You need to accept the Gemma licence.
 
-Alternatively, the MediaPipe release page ships the same artefact:
-[ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android](https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/android)
-
-Rename the downloaded file to `gemma2b.task`.
+Rename the downloaded file to `gemma2b.litertlm`.
 
 #### Step 2 — Transfer to the device (pick one method)
 
 **Option A — ADB push (recommended for development)**
 
 ```bash
-adb push gemma2b.task /sdcard/Download/gemma2b.task
+adb push gemma2b.litertlm /sdcard/Download/gemma2b.litertlm
 ```
 
 **Option B — USB file transfer / Google Drive / USB drive**
@@ -122,9 +123,9 @@ Copy the file to any location your device's Files app can see (e.g. `Downloads`)
 #### Step 3 — In-app import
 
 1. Launch PocketSage. The gate screen appears automatically when no model is present.
-2. Tap **Pick gemma2b.task**.
+2. Tap **Pick gemma2b.litertlm**.
 3. Navigate to the file using the system file picker and select it.
-4. A progress bar shows while the file is copied into app-private storage (`filesDir/models/gemma2b.task`). The original file in `Downloads` can be deleted afterwards.
+4. A progress bar shows while the file is copied into app-private storage (`filesDir/models/gemma2b.litertlm`). The original file in `Downloads` can be deleted afterwards.
 5. Once the copy finishes, the main app loads automatically.
 
 The model is stored in the app's private sandbox — no other app can read it and it is removed when the app is uninstalled.
@@ -133,11 +134,11 @@ The model is stored in the app's private sandbox — no other app can read it an
 
 ## How RAG works here, in three paragraphs
 
-When you add a PDF, PocketSage extracts the text, splits it into ~800-character overlapping chunks, embeds each chunk with a tiny BERT-family model (MiniLM), and stores the resulting 384-dimensional vectors as raw bytes in a Room table. This step is one-time per document and runs in the background with progress reported to the UI.
+When you add a PDF, PocketSage extracts the text, splits it into ~800-character overlapping chunks, embeds each chunk with a tiny BERT-family model (MiniLM) via LiteRT, and stores the resulting 384-dimensional vectors as raw bytes in a Room table. This step is one-time per document and runs in the background with progress reported to the UI.
 
 When you ask a question, the same embedding model converts your question into a vector. The app then computes cosine similarity between the question vector and every stored chunk, takes the top four matches, and stitches them into a prompt template that explicitly tells the LLM to answer only from the supplied context.
 
-The prompt is fed to Gemma 2B running in MediaPipe's `LlmInference` runtime, which streams tokens back through a callback. Each token is appended to a `StateFlow<String>` that the chat screen renders in real time, with the retrieved chunks shown beneath each answer so you can verify the model isn't hallucinating.
+The prompt is fed to Gemma 2B running in the LiteRT-LM (`litertlm-android`) runtime, which streams tokens back through a `ResponseCallback`. Each token is appended to a `StateFlow<String>` that the chat screen renders in real time, with the retrieved chunks shown beneath each answer so you can verify the model isn't hallucinating.
 
 ## Quick start
 
@@ -168,7 +169,7 @@ Help wanted on any of these:
 - **`help wanted`** — Cross-encoder re-ranker over the top 20 → top 4.
 - **`help wanted`** — Multi-turn chat with rolling summarization.
 - **`help wanted`** — OCR for scanned PDFs (ML Kit Text Recognition).
-- **`research`** — Pluggable LLM runtime: llama.cpp via JNI as an alternative to MediaPipe.
+- **`research`** — Pluggable LLM runtime: llama.cpp via JNI as an alternative to LiteRT-LM.
 
 ## Contributing
 
@@ -198,7 +199,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
 
 ## Acknowledgements
 
-This project stands on the shoulders of [MediaPipe](https://github.com/google-ai-edge/mediapipe), [TensorFlow Lite](https://www.tensorflow.org/lite), [sentence-transformers](https://www.sbert.net/), [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), and the Android team's [MAD Skills](https://developer.android.com/series/mad-skills) series.
+This project stands on the shoulders of [LiteRT](https://github.com/google-ai-edge/LiteRT), [LiteRT-LM](https://ai.google.dev/edge/litert-lm/android), [sentence-transformers](https://www.sbert.net/), [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), and the Android team's [MAD Skills](https://developer.android.com/series/mad-skills) series.
 
 ---
 
