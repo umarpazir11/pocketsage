@@ -1,4 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PocketSage</string>
+
+    <!-- Model Gate -->
+    <string name="model_required_title">Gemma 4 E2B model required</string>
+    <string name="model_required_body">Download the model from Hugging Face and pick the file below. See the README for step-by-step instructions.</string>
+    <string name="model_download_link_label">Hugging Face</string>
+    <string name="model_download_url" translatable="false">https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm</string>
+    <string name="model_direct_download_url" translatable="false">https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm?download=true</string>
+    <string name="download_model_button">Download gemma-4-E2B-it model (2.58 GB)</string>
+    <string name="import_model_button">Pick gemma-4-E2B-it-litertlm.litertlm</string>
+    <string name="model_copying">Copying model…</string>
+    <string name="model_import_failed">Import failed</string>
+    <string name="try_again">Try again</string>
+
+    <!-- Library -->
+    <string name="screen_library">Library</string>
+    <string name="add_pdf_description">Add PDF</string>
+    <string name="library_empty_message">Add a PDF to get started</string>
+    <string name="delete_document_title">Delete \"%s\"?</string>
+    <string name="delete_document_body">This will remove the document and all its chunks.</string>
+    <string name="delete_button">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="doc_metadata">%1$d chunks · %2$s</string>
+
+    <!-- Chat -->
+    <string name="navigate_back">Back</string>
+    <string name="sources_count">Sources (%d)</string>
+    <string name="chat_input_hint">Message…</string>
+    <string name="send_button">Send</string>
 </resources>

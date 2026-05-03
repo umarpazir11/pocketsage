@@ -1,9 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
@@ -17,6 +26,22 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "MODEL_FILENAME",
+            localProperties.getProperty("MODEL_FILENAME", "\"gemma-4-E2B-it-litertlm.litertlm\""),
+        )
+        buildConfigField(
+            "int",
+            "LLM_TOP_K",
+            localProperties.getProperty("LLM_TOP_K", "40"),
+        )
+        buildConfigField(
+            "float",
+            "LLM_TEMPERATURE",
+            localProperties.getProperty("LLM_TEMPERATURE", "0.7f"),
+        )
     }
 
     buildTypes {
