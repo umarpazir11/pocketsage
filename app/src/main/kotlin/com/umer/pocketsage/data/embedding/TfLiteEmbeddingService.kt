@@ -16,7 +16,7 @@ class TfLiteEmbeddingService @Inject constructor(
     private val vocab: Map<String, Int> by lazy { assetLoader.loadVocab() }
 
     private val interpreter: Interpreter by lazy {
-        Interpreter(assetLoader.loadModel(), Interpreter.Options().apply { numThreads = 4 })
+        Interpreter(assetLoader.loadModel(), Interpreter.Options().setNumThreads(4))
     }
 
     override suspend fun embed(text: String): FloatArray = withContext(Dispatchers.Default) {

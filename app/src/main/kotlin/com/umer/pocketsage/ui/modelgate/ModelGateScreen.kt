@@ -56,7 +56,7 @@ fun ModelGate(
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "Download gemma2b.task from Kaggle or the MediaPipe release page " +
+                        text = "Download gemma2b.litertlm from ai.google.dev/edge/litert-lm/android " +
                             "and pick the file below. See the README for step-by-step instructions.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
@@ -64,7 +64,7 @@ fun ModelGate(
                     Button(onClick = {
                         launcher.launch(arrayOf("application/octet-stream", "*/*"))
                     }) {
-                        Text("Pick gemma2b.task")
+                        Text("Pick gemma2b.litertlm")
                     }
                 }
 

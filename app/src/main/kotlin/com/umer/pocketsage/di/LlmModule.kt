@@ -1,6 +1,6 @@
 package com.umer.pocketsage.di
 
-import com.umer.pocketsage.data.llm.MediaPipeLlmRunner
+import com.umer.pocketsage.data.llm.LiteRtLmRunner
 import com.umer.pocketsage.domain.LlmRunner
 import dagger.Binds
 import dagger.Module
@@ -14,5 +14,5 @@ abstract class LlmModule {
 
     @Binds
     @Singleton
-    abstract fun bindLlmRunner(impl: MediaPipeLlmRunner): LlmRunner
+    abstract fun bindLlmRunner(impl: LiteRtLmRunner): LlmRunner
 }

@@ -1,22 +1,21 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.0.0"
-ksp = "2.0.0-1.0.21"
+kotlin = "2.2.0"
+ksp = "2.2.0-2.0.2"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.3"
 activityCompose = "1.9.0"
-composeBom = "2024.09.00"
-navigationCompose = "2.8.3"
-hilt = "2.51.1"
+composeBom = "2025.05.00"
+navigationCompose = "2.9.0"
+hilt = "2.58"
 hiltNavigationCompose = "1.2.0"
-room = "2.6.1"
+room = "2.7.1"
 coroutines = "1.8.1"
-mediapipe = "0.10.14"
-tensorflow = "2.16.1"
-tensorflowSupport = "0.4.4"
+litert = "1.4.0"
+litertlm = "0.10.2"
 pdfbox = "2.0.27.0"
 datastore = "1.1.1"
 
@@ -55,12 +54,12 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
-# MediaPipe
-mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipe" }
+# LiteRT (replaces TFLite)
+litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "litert" }
+litert-support = { group = "com.google.ai.edge.litert", name = "litert-support", version.ref = "litert" }
 
-# TFLite
-tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflow" }
-tensorflow-lite-support = { group = "org.tensorflow", name = "tensorflow-lite-support", version.ref = "tensorflowSupport" }
+# LiteRT-LM (replaces MediaPipe tasks-genai)
+litertlm = { group = "com.google.ai.edge.litertlm", name = "litertlm-android", version.ref = "litertlm" }
 
 # PDFBox
 pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
