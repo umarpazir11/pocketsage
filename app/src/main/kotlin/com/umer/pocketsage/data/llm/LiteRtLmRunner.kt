@@ -64,7 +64,10 @@ class LiteRtLmRunner @Inject constructor(
             }
         )
 
-        awaitClose { session.close() }
+        awaitClose {
+            activeSession = null
+            session.close()
+        }
     }.flowOn(Dispatchers.IO)
 
     fun close() {
