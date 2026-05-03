@@ -30,9 +30,8 @@ fun AppNavGraph(nav: NavHostController) {
                 nullable = true
                 defaultValue = null
             })
-        ) { backStackEntry ->
-            val docId = backStackEntry.arguments?.getString("docId")
-            ChatScreen(docId = docId, onNavigateUp = { nav.navigateUp() })
+        ) {
+            ChatScreen(onNavigateUp = { nav.navigateUp() })
         }
     }
 }
