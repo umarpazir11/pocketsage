@@ -2,209 +2,221 @@
 
 # PocketSage
 
-**A fully offline, on-device RAG app for Android.**
-Ask questions about any PDF — your data never leaves the phone.
+### A fully offline, on-device RAG Android application powered by LiteRT-LM.
+### No servers. No API keys. Complete privacy.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Min SDK](https://img.shields.io/badge/Min%20SDK-26-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
-[![Build](https://img.shields.io/github/actions/workflow/status/umerdilpazir/pocketsage/android.yml?branch=main)](../../actions)
-
-<img src="docs/demo.gif" width="300" alt="PocketSage demo" />
+<img src="docs/demo.gif" width="320" alt="PocketSage demo" />
 
 </div>
 
 ---
 
-## Why PocketSage exists
+## Why this exists
 
-Most "chat with your PDF" tools ship your documents to a remote server. That's fine for marketing copy, but a problem for medical records, legal filings, financial statements, and the kinds of documents people most want a private assistant for.
-
-PocketSage runs the **entire RAG pipeline on the device** — embeddings, vector search, and LLM inference all happen locally on your Android phone. Airplane mode works. Your documents stay on your hardware. The model weights live in your app sandbox.
-
-It's also a working reference for **Modern Android Development (MAD Skills)** done well: Compose, Hilt, Room, Coroutines, MVVM, and clean separation between data, domain, and UI layers — applied to a non-trivial ML problem.
-
-## Features
-
-- **100% offline** — no network calls, ever. Verified by Android's network restrictions.
-- **PDF ingestion** — pick any PDF from your device; PocketSage extracts, chunks, and embeds it locally.
-- **Semantic search** — LiteRT `all-MiniLM-L6-v2` produces 384-dim embeddings stored as BLOBs in Room.
-- **On-device LLM** — Gemma 2B (INT4, ~1.3 GB) running through Google's `LiteRT-LM` (`litertlm-android`) API.
-- **Streaming answers** — tokens stream into the UI as they're generated, with retrieved sources shown alongside each answer.
-- **Private by design** — model weights and document embeddings live only in your app's sandbox storage.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph Ingestion
-        A[PDF picked via SAF] --> B[PdfBox text extraction]
-        B --> C[Chunker<br/>800 chars / 120 overlap]
-        C --> D[MiniLM via LiteRT<br/>384-dim embedding]
-        D --> E[(Room: chunks + BLOB)]
-    end
-
-    subgraph "Query time"
-        Q[User question] --> QE[Embed]
-        QE --> R[Cosine top-K<br/>over Room]
-        E --> R
-        R --> P[Prompt template]
-        P --> L[LiteRT-LM Gemma 2B]
-        L --> S[Streamed tokens<br/>+ source chunks]
-    end
-```
-
-Three clean layers throughout: `data/` owns persistence and ML runtimes, `domain/` owns the RAG pipeline and pure interfaces, `ui/` is Compose with one ViewModel per screen.
-
-## Tech stack
-
-| Layer | Choice | Why |
-| --- | --- | --- |
-| UI | Jetpack Compose + Material 3 | The MAD Skills default; dynamic color on API 31+. |
-| Architecture | MVVM, single Activity, Navigation Compose | Standard, testable, recruiter-recognisable. |
-| DI | Hilt 2.58 | First-party, less boilerplate than Dagger. |
-| Persistence | Room 2.7.1 (SQLite) | Embeddings stored as `BLOB`; cosine in Kotlin. |
-| Embeddings | `all-MiniLM-L6-v2` via **LiteRT 1.4.0** | 22 MB, 384-dim, well-benchmarked, runs anywhere. |
-| PDF parsing | `pdfbox-android` | Mature port; handles most consumer PDFs. |
-| LLM | **LiteRT-LM (`litertlm-android` 0.10.2)** + Gemma 2B | Google's current on-device LLM API. INT4 quant. |
-| Async | Coroutines + Flow | Streaming tokens map cleanly onto `callbackFlow`. |
-
-> **LiteRT** is Google's rebranding of TensorFlow Lite. The Maven coordinates changed (`com.google.ai.edge.litert`), but all Kotlin/Java classes remain in the `org.tensorflow.lite.*` packages in v1.4.0.
->
-> **LiteRT-LM** (`litertlm-android`) is Google's replacement for MediaPipe `tasks-genai`. It uses an `Engine` + `Session` API for streaming token generation.
-
-## Models
-
-Neither model is checked into the repo — both are large and carry their own licenses.
-
-### Embedding model (`all-MiniLM-L6-v2`)
-
-| File | Size | License |
-|---|---|---|
-| `all-MiniLM-L6-v2.tflite` | ~22 MB | Apache 2.0 |
-| `vocab.txt` | ~226 KB | Apache 2.0 |
-
-Download the INT8-quantised TFLite conversion from the [Hugging Face model page](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) (community TFLite build: [`Nihal2000/all-MiniLM-L6-v2-quant.tflite`](https://huggingface.co/Nihal2000/all-MiniLM-L6-v2-quant.tflite)).
-
-Place both files at:
-
-```
-app/src/main/assets/embedding/all-MiniLM-L6-v2.tflite
-app/src/main/assets/embedding/vocab.txt
-```
-
-### LLM (`gemma2b.litertlm`)
-
-| File | Size | License |
-|---|---|---|
-| `gemma2b.litertlm` | ~1.3 GB | [Gemma Terms of Use](https://ai.google.dev/gemma/terms) |
-
-The model is **not bundled in the APK**. You download it once and PocketSage copies it into app-private storage at first launch.
-
-#### Step 1 — Download
-
-Go to [ai.google.dev/edge/litert-lm/android](https://ai.google.dev/edge/litert-lm/android) and download the Gemma 2B LiteRT-LM model (`.litertlm` format). You need to accept the Gemma licence.
-
-Rename the downloaded file to `gemma2b.litertlm`.
-
-#### Step 2 — Transfer to the device (pick one method)
-
-**Option A — ADB push (recommended for development)**
-
-```bash
-adb push gemma2b.litertlm /sdcard/Download/gemma2b.litertlm
-```
-
-**Option B — USB file transfer / Google Drive / USB drive**
-
-Copy the file to any location your device's Files app can see (e.g. `Downloads`).
-
-#### Step 3 — In-app import
-
-1. Launch PocketSage. The gate screen appears automatically when no model is present.
-2. Tap **Pick gemma2b.litertlm**.
-3. Navigate to the file using the system file picker and select it.
-4. A progress bar shows while the file is copied into app-private storage (`filesDir/models/gemma2b.litertlm`). The original file in `Downloads` can be deleted afterwards.
-5. Once the copy finishes, the main app loads automatically.
-
-The model is stored in the app's private sandbox — no other app can read it and it is removed when the app is uninstalled.
+Most "AI on Android" demos are thin wrappers around cloud APIs. PocketSage is the opposite: the entire Retrieval-Augmented Generation pipeline — PDF extraction, text chunking, embedding inference, vector retrieval, prompt construction, and streaming LLM generation — runs on the device with no network permission whatsoever. It exists to demonstrate that serious on-device GenAI engineering is achievable on Android today, and to do so with the same architectural discipline expected of production apps: clean layers, Hilt-wired dependencies, testable domain logic, and a Compose UI that reacts to streamed output in real time.
 
 ---
 
-## How RAG works here, in three paragraphs
+## Features
 
-When you add a PDF, PocketSage extracts the text, splits it into ~800-character overlapping chunks, embeds each chunk with a tiny BERT-family model (MiniLM) via LiteRT, and stores the resulting 384-dimensional vectors as raw bytes in a Room table. This step is one-time per document and runs in the background with progress reported to the UI.
+- Import PDF documents directly from device storage via the Storage Access Framework
+- Extract and chunk document text on-device using `pdfbox-android`
+- Generate 384-dimensional embeddings locally using a quantised MiniLM model via LiteRT
+- Retrieve the top-K most relevant chunks with cosine similarity over a Room-backed vector store
+- Build grounded prompts that constrain the LLM to retrieved context only
+- Stream token-by-token answers from an on-device LLM via LiteRT-LM
+- View cited source snippets alongside each answer directly in the chat UI
+- 100% offline after the one-time model import — no internet permission exists in the app
 
-When you ask a question, the same embedding model converts your question into a vector. The app then computes cosine similarity between the question vector and every stored chunk, takes the top four matches, and stitches them into a prompt template that explicitly tells the LLM to answer only from the supplied context.
+---
 
-The prompt is fed to Gemma 2B running in the LiteRT-LM (`litertlm-android`) runtime, which streams tokens back through a `ResponseCallback`. Each token is appended to a `StateFlow<String>` that the chat screen renders in real time, with the retrieved chunks shown beneath each answer so you can verify the model isn't hallucinating.
+## Architecture
 
-## Quick start
-
-```bash
-git clone https://github.com/umerdilpazir/pocketsage.git
-cd pocketsage
+```
+PDF  ──►  Extract  ──►  Chunk  ──►  Embed  ──►  Room Store
+                                                     │
+                                               (cosine search)
+                                                     │
+User Query  ──►  Embed  ──────────────────────►  Retrieve
+                                                     │
+                                              Prompt Builder
+                                                     │
+                                             LiteRT-LM Engine
+                                                     │
+                                           Token Stream  ──►  Compose UI
 ```
 
-Download the required model files first — see [Models](#models) for exact filenames and placement.
+**Ingestion** — The user picks a PDF via the system file picker. `pdfbox-android` extracts raw text; a sliding-window chunker splits it into ~800-character overlapping segments. Each chunk is embedded by a local MiniLM `.tflite` model (via LiteRT) and stored as a raw 384-float BLOB in Room alongside the chunk text.
 
-Then:
+**Retrieval** — When a question arrives, the same MiniLM model embeds it. The app loads all stored chunk embeddings from Room, computes cosine similarity against the query vector in-memory (dot product over L2-normalised vectors), and takes the top-K results.
 
+**Generation** — The top chunks are stitched into a prompt template that instructs the model to answer only from the provided context. That prompt is fed to a `LiteRT-LM` `Engine` + `Session`, which streams response tokens back through a `ResponseCallback`. The ViewModel appends each token to a `StateFlow` that the chat composable observes.
+
+The embedding pipeline and the LLM generation pipeline are fully decoupled behind `EmbeddingService` and `LlmRunner` domain interfaces, so either can be swapped without touching the other layer.
+
+---
+
+## Tech Stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| UI | Jetpack Compose + Material 3 | Modern, declarative native Android UI |
+| DI | Hilt 2.58 | First-party, compile-time dependency wiring |
+| Storage | Room 2.7.1 | Local structured persistence with BLOB support for embeddings |
+| PDF parsing | `pdfbox-android` | Mature on-device text extraction; no network calls |
+| Embeddings runtime | LiteRT 1.4.0 | On-device embedding inference; Google's successor to TFLite |
+| LLM runtime | LiteRT-LM 0.10.2 (`litertlm-android`) | On-device streaming generation for `.litertlm` models |
+| Concurrency | Kotlin Coroutines + Flow | Async ingestion pipelines and real-time token streaming |
+
+---
+
+## How the LLM works
+
+The `.litertlm` model file is stored in app-private storage (`filesDir/models/`), inaccessible to other apps and removed automatically on uninstall.
+
+On launch, the app checks for the model file. If it is absent, the **Model Gate** screen prompts the user to import it via the Storage Access Framework — no sideloading, no `adb` commands required for end users.
+
+Once present, the `LiteRT-LM` engine is initialised like this:
+
+```kotlin
+val engine = Engine(
+    EngineConfig(
+        modelPath = modelRepo.getModelPath().absolutePath,
+        cacheDir  = context.cacheDir.absolutePath,
+    )
+)
+engine.initialize()  // executed on a background coroutine — never blocks the main thread
+```
+
+`engine.initialize()` is intentionally expensive — it loads and memory-maps the model weights. It is called exactly once (inside a `by lazy` block) and runs on `Dispatchers.IO` to keep the UI thread responsive.
+
+For each user question a new `Session` is created from the live engine. Tokens are streamed back through `ResponseCallback.onNext(response)` and bridged into a Kotlin `Flow<String>` via `callbackFlow`, so the Compose UI updates on every token with no polling:
+
+```kotlin
+session.generateContentStream(
+    listOf(InputData.Text(prompt)),
+    object : ResponseCallback {
+        override fun onNext(response: String) { trySend(response) }
+        override fun onDone()                 { close() }
+        override fun onError(t: Throwable)    { close(t) }
+    }
+)
+```
+
+---
+
+## Models
+
+### LLM — `gemma-4-E2B-it-litert-lm`
+
+| Property | Value |
+|---|---|
+| Format | `.litertlm` |
+| Size | ~2.58 GB |
+| Source | Hugging Face — `litert-community/gemma-4-E2B-it-litert-lm` / Google AI Edge |
+| License | Gemma Terms of Use |
+
+The model is **not bundled in the APK**. Users download it once to their device and import it on first launch via the in-app model gate. This keeps the APK small and keeps the model weights under the user's direct control.
+
+### Embedding model — `all-MiniLM-L6-v2`
+
+| Property | Value |
+|---|---|
+| Format | `.tflite` (quantised INT8) |
+| Size | ~22 MB |
+| Source | `Nihal2000/all-MiniLM-L6-v2-quant.tflite` on Hugging Face |
+| License | Apache 2.0 |
+
+The embedding model ships inside `assets/embedding/` and requires no user action.
+
+---
+
+## Setup
+
+### Prerequisites
+- Android Studio Meerkat or later
+- Physical Android device — emulators are not recommended for heavy on-device ML workloads
+- Device with 4 GB+ RAM and ~3 GB free storage
+
+### Steps
+
+**1. Clone and open**
+```bash
+git clone https://github.com/umerdilpazir/pocketsage.git
+```
+Open the project in Android Studio and let Gradle sync complete.
+
+**2. Build and install**
 ```bash
 ./gradlew installDebug
 ```
 
-Open the app, tap the **+** button to add a PDF, and ask away.
+**3. Download the LLM**
 
-## Roadmap
+Download `gemma-4-E2B-it-litert-lm.litertlm` (~2.58 GB) from Hugging Face (`litert-community/gemma-4-E2B-it-litert-lm`) to your phone's `Downloads` folder. You will need to accept the Gemma licence.
 
-The v0.1 milestone ships a working end-to-end RAG loop. After that, the goal is to keep the codebase **legible** rather than dense — every addition should be something a reader can understand without trawling the whole repo.
+Alternatively, push it via ADB:
+```bash
+adb push gemma-4-E2B-it-litert-lm.litertlm /sdcard/Download/
+```
 
-Help wanted on any of these:
+**4. Import the model**
 
-- **`good first issue`** — Settings screen with sliders for chunk size, overlap, and top-K.
-- **`good first issue`** — Empty-state and error-state polish across both screens.
-- **`help wanted`** — ANN index (Hnswlib JNI or ObjectBox vector search) once chunk count > a few thousand.
-- **`help wanted`** — Cross-encoder re-ranker over the top 20 → top 4.
-- **`help wanted`** — Multi-turn chat with rolling summarization.
-- **`help wanted`** — OCR for scanned PDFs (ML Kit Text Recognition).
-- **`research`** — Pluggable LLM runtime: llama.cpp via JNI as an alternative to LiteRT-LM.
+Launch PocketSage. The Model Gate screen appears automatically. Tap **Pick gemma2b.litertlm**, navigate to `Downloads`, and select the file. A progress bar tracks the copy into app-private storage. The app advances to the main screen once complete.
 
-## Contributing
+**5. Add a PDF and start chatting**
 
-Contributions are genuinely welcome — whether you're an Android dev curious about on-device ML, an ML engineer who wants to learn Compose, or a documentation hawk.
+Tap **+** on the Library screen to import a PDF. Once ingestion completes, tap the document and ask a question. Answers stream token by token with cited source snippets shown below each response.
 
-The fastest way in:
+---
 
-1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) — it covers the architecture, testing approach, and PR conventions.
-2. Pick an issue tagged `good first issue` or `help wanted`. Each one has a clear acceptance checklist.
-3. Open a draft PR early. Code review is collaborative here, not adversarial.
+## Screenshots
 
-If you want to propose something larger that isn't on the roadmap, open an issue with a short design sketch first. Saves everyone time.
+| Library | Model Import | Chat | Sources |
+|---|---|---|---|
+| ![Library Screen](docs/screenshots/library.png) | ![Model Import](docs/screenshots/model-import.png) | ![Chat](docs/screenshots/chat.png) | ![Sources](docs/screenshots/sources.png) |
+| Managing local PDF documents | One-time model provisioning | Streaming LLM responses | Verifying context with cited sources |
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `refactor:`...) and use `ktlint` + `detekt` in CI. Both run with `./gradlew check`.
+---
 
-## Limitations (honest version)
+## Demo
 
-- Cosine similarity is brute-force — fine for thousands of chunks, not millions.
-- Single-turn Q&A; no conversation memory yet.
-- Image-only / scanned PDFs aren't handled (no OCR in v0.1).
-- Gemma 2B is a small model. Expect competent extractive answers, not deep reasoning.
-- First model load takes ~5–10 seconds on mid-range devices. Subsequent queries are fast.
+<div align="center">
+<img src="docs/demo.gif" width="320" alt="PocketSage full demo" />
+</div>
 
-## License
+The GIF above demonstrates: launching the app for the first time, importing the `.litertlm` model via the Model Gate, adding a PDF through the Library screen, and watching an answer stream token by token with retrieved source chunks shown alongside the response.
 
-[MIT](LICENSE) — do whatever you want, but don't blame me. Note that the embedding model is Apache 2.0 and Gemma has its own [usage terms](https://ai.google.dev/gemma/terms) — check both before shipping a derivative product.
+---
 
-## Acknowledgements
+## Engineering Highlights
 
-This project stands on the shoulders of [LiteRT](https://github.com/google-ai-edge/LiteRT), [LiteRT-LM](https://ai.google.dev/edge/litert-lm/android), [sentence-transformers](https://www.sbert.net/), [PdfBox-Android](https://github.com/TomRoush/PdfBox-Android), and the Android team's [MAD Skills](https://developer.android.com/series/mad-skills) series.
+- **Fully offline RAG on Android** — no network permission, no cloud dependency at any stage of the pipeline
+- **Local vector retrieval** — cosine similarity over Room-backed BLOB storage; no third-party vector DB required
+- **Real-time streaming generation** — `callbackFlow` bridges the native `ResponseCallback` into a Kotlin `Flow<String>` consumed directly by a Compose `StateFlow`
+- **Clean architectural separation** — `EmbeddingService` and `LlmRunner` domain interfaces fully decouple the retrieval engine from the generation engine; both are independently testable and swappable
+- **Secure model provisioning** — the LLM lives in app-private `filesDir`; the import flow uses the Storage Access Framework with a copy-and-verify pattern and a progress indicator
+- **Production-style Android architecture** — Hilt for DI, Room for persistence, `Result<T>` for cross-layer error propagation, sealed `UiState` interfaces, stateless Composables hoisted to ViewModels
+
+---
+
+## Known Constraints
+
+- Requires a modern Android device with at least 4 GB RAM and ~3 GB of free storage for the LLM model file
+- First-time `engine.initialize()` can take 5–15 seconds depending on device hardware; a loading indicator covers this
+- Output quality depends on the selected local model and the relevance of the retrieved chunks — Gemma 2B produces solid extractive answers but is not a reasoning model
+- Cosine retrieval is brute-force over in-memory vectors; suitable for thousands of chunks; an ANN index would be needed at larger scale
+
+---
+
+## Conclusion
+
+PocketSage is a practical demonstration that a complete, production-quality Retrieval-Augmented Generation pipeline can be built entirely on an Android device — no servers, no API keys, no compromises on user privacy. It combines deep Android engineering (Compose, Hilt, Room, Coroutines) with hands-on applied AI work (embedding inference, vector retrieval, streaming LLM generation) in a codebase that is clean, layered, and built to the same standards as production Android applications.
 
 ---
 
 <div align="center">
 
-If PocketSage is useful to you, a star on the repo helps others find it.
+If PocketSage is useful to you, a ⭐ on the repo helps others find it.
 
 </div>
