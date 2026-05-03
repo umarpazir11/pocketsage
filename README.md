@@ -13,21 +13,18 @@
 
 ## Why this exists
 
-Most "AI on Android" demos are thin wrappers around cloud APIs. PocketSage is the opposite: the entire Retrieval-Augmented Generation pipeline — PDF extraction, text chunking, embedding inference, vector retrieval, prompt construction, and streaming LLM generation — runs on the device with no network permission whatsoever. It exists to demonstrate that serious on-device GenAI engineering is achievable on Android today, and to do so with the same architectural discipline expected of production apps: clean layers, Hilt-wired dependencies, testable domain logic, and a Compose UI that reacts to streamed output in real time.
-
+Most "AI on Android" are thin wrappers around cloud APIs. PocketSage runs the **entire RAG pipeline on the device** — embeddings, vector search, and LLM inference all happen locally on your Android phone. Airplane mode works. Your documents stay on your hardware. The model weights live in your app sandbox.
 ---
 
 ## Features
 
-- Import PDF documents directly from device storage via the Storage Access Framework
-- Extract and chunk document text on-device using `pdfbox-android`
-- Generate 384-dimensional embeddings locally using a quantised MiniLM model via LiteRT
-- Retrieve the top-K most relevant chunks with cosine similarity over a Room-backed vector store
-- Build grounded prompts that constrain the LLM to retrieved context only
-- Stream token-by-token answers from an on-device LLM via LiteRT-LM
-- View cited source snippets alongside each answer directly in the chat UI
-- 100% offline after the one-time model import — no internet permission exists in the app
-
+- **100% offline** — no network calls, ever. Verified by Android's network restrictions. after the one-time model import — no internet permission exists in the app
+- **PDF ingestion** — pick any PDF from your device; PocketSage extracts, chunks, and embeds it locally.
+- **Semantic search** — LiteRT `all-MiniLM-L6-v2` produces 384-dim embeddings stored as BLOBs in Room.
+- **On-device LLM** — Gemma 2B (INT4, ~1.3 GB) running through Google's `LiteRT-LM` (`litertlm-android`) API.
+- **Streaming answers** — tokens stream into the UI as they're generated, with retrieved sources shown alongside each answer.
+- **Private by design** — model weights and document embeddings live only in your app's sandbox storage.
+- 
 ---
 
 ## Architecture
