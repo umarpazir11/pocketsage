@@ -46,11 +46,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umer.pocketsage.R
 import com.umer.pocketsage.domain.RetrievedChunk
 import com.umer.pocketsage.ui.theme.PocketSageTheme
 
@@ -95,7 +97,10 @@ private fun ChatContent(
                 title = { Text(docTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.navigate_back),
+                        )
                     }
                 },
             )
@@ -167,7 +172,7 @@ private fun MessageBubble(
             if (msg.sources.isNotEmpty()) {
                 AssistChip(
                     onClick = { showSources = !showSources },
-                    label = { Text("Sources (${msg.sources.size})") },
+                    label = { Text(stringResource(R.string.sources_count, msg.sources.size)) },
                     modifier = Modifier.padding(top = 4.dp),
                 )
                 if (showSources) {
@@ -237,7 +242,7 @@ private fun InputRow(
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },
-            placeholder = { Text("Message…") },
+            placeholder = { Text(stringResource(R.string.chat_input_hint)) },
             modifier = Modifier.weight(1f),
             maxLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -259,7 +264,10 @@ private fun InputRow(
             enabled = canSend,
             modifier = Modifier.padding(start = 4.dp),
         ) {
-            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+            Icon(
+                Icons.AutoMirrored.Filled.Send,
+                contentDescription = stringResource(R.string.send_button),
+            )
         }
     }
 }

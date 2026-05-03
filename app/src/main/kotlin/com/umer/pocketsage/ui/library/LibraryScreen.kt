@@ -35,8 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umer.pocketsage.R
 import com.umer.pocketsage.domain.Document
 import com.umer.pocketsage.domain.IngestProgress
 import com.umer.pocketsage.ui.theme.PocketSageTheme
@@ -79,12 +81,12 @@ fun LibraryScreen(
             ingest !is IngestProgress.Error
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Library") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.screen_library)) }) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { filePicker.launch(arrayOf("application/pdf")) },
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add PDF")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_pdf_description))
             }
         },
     ) { innerPadding ->
@@ -115,7 +117,7 @@ fun LibraryScreen(
                 LibraryUiState.Empty -> Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
-                ) { Text("Add a PDF to get started") }
+                ) { Text(stringResource(R.string.library_empty_message)) }
 
                 is LibraryUiState.Loaded -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(s.docs, key = { it.id }) { doc ->
@@ -134,16 +136,18 @@ fun LibraryScreen(
     deleteTarget?.let { doc ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete \"${doc.title}\"?") },
-            text = { Text("This will remove the document and all its chunks.") },
+            title = { Text(stringResource(R.string.delete_document_title, doc.title)) },
+            text = { Text(stringResource(R.string.delete_document_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.delete(doc.id)
                     deleteTarget = null
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.delete_button)) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
             },
         )
     }
@@ -164,7 +168,7 @@ private fun DocumentRow(
     }
     ListItem(
         headlineContent = { Text(doc.title) },
-        supportingContent = { Text("${doc.chunkCount} chunks · $date") },
+        supportingContent = { Text(stringResource(R.string.doc_metadata, doc.chunkCount, date)) },
         modifier = Modifier.combinedClickable(
             onClick = onClick,
             onLongClick = onLongClick,
@@ -178,10 +182,10 @@ private fun DocumentRow(
 private fun LibraryEmptyPreview() {
     PocketSageTheme {
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Library") }) },
+            topBar = { TopAppBar(title = { Text(stringResource(R.string.screen_library)) }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = {}) {
-                    Icon(Icons.Default.Add, contentDescription = "Add PDF")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_pdf_description))
                 }
             },
         ) { innerPadding ->
@@ -190,7 +194,7 @@ private fun LibraryEmptyPreview() {
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center,
-            ) { Text("Add a PDF to get started") }
+            ) { Text(stringResource(R.string.library_empty_message)) }
         }
     }
 }

@@ -8,6 +8,7 @@ import com.google.ai.edge.litertlm.ResponseCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import com.google.ai.edge.litertlm.Session
 import com.google.ai.edge.litertlm.SessionConfig
+import com.umer.pocketsage.BuildConfig
 import com.umer.pocketsage.domain.LlmRunner
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -29,12 +30,20 @@ class LiteRtLmRunner @Inject constructor(
             EngineConfig(
                 modelPath = modelRepo.getModelPath().absolutePath,
                 cacheDir = ctx.cacheDir.absolutePath,
+                // maxNumTokens is intentionally left at its default (null) so the
+                // runtime reads the limit from the model's own metadata. Overriding
+                // it causes a DYNAMIC_UPDATE_SLICE tensor shape error at inference time.
             )
         ).also { it.initialize() }
     }
 
     private val sessionConfig = SessionConfig(
-        SamplerConfig(topK = 40, topP = 0.9, temperature = 0.7, seed = 0)
+        SamplerConfig(
+            topK = BuildConfig.LLM_TOP_K,
+            topP = 0.9,
+            temperature = BuildConfig.LLM_TEMPERATURE.toDouble(),
+            seed = 0,
+        )
     )
 
     private var activeSession: Session? = null

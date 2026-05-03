@@ -11,15 +11,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.umer.pocketsage.R
 
 @Composable
 fun ModelGate(
@@ -51,26 +61,43 @@ fun ModelGate(
             when (val state = uiState) {
                 ModelGateUiState.Idle -> {
                     Text(
-                        text = "Gemma 2B model required",
+                        text = stringResource(R.string.model_required_title),
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center
                     )
+                    val bodyText = stringResource(R.string.model_required_body)
+                    val linkLabel = stringResource(R.string.model_download_link_label)
+                    val url = stringResource(R.string.model_download_url)
+                    val linkColor = MaterialTheme.colorScheme.primary
                     Text(
-                        text = "Download gemma2b.litertlm from ai.google.dev/edge/litert-lm/android " +
-                            "and pick the file below. See the README for step-by-step instructions.",
+                        text = buildAnnotatedString {
+                            val linkStart = bodyText.indexOf(linkLabel)
+                            append(bodyText.substring(0, linkStart))
+                            withLink(LinkAnnotation.Url(url)) {
+                                withStyle(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)) {
+                                    append(linkLabel)
+                                }
+                            }
+                            append(bodyText.substring(linkStart + linkLabel.length))
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
+                    val uriHandler = LocalUriHandler.current
+                    val directDownloadUrl = stringResource(R.string.model_direct_download_url)
+                    OutlinedButton(onClick = { uriHandler.openUri(directDownloadUrl) }) {
+                        Text(stringResource(R.string.download_model_button))
+                    }
                     Button(onClick = {
                         launcher.launch(arrayOf("application/octet-stream", "*/*"))
                     }) {
-                        Text("Pick gemma2b.litertlm")
+                        Text(stringResource(R.string.import_model_button))
                     }
                 }
 
                 is ModelGateUiState.Importing -> {
                     Text(
-                        text = "Copying model…",
+                        text = stringResource(R.string.model_copying),
                         style = MaterialTheme.typography.bodyLarge
                     )
                     LinearProgressIndicator(
@@ -85,7 +112,7 @@ fun ModelGate(
 
                 is ModelGateUiState.Error -> {
                     Text(
-                        text = "Import failed",
+                        text = stringResource(R.string.model_import_failed),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -98,7 +125,7 @@ fun ModelGate(
                     Button(onClick = {
                         launcher.launch(arrayOf("application/octet-stream", "*/*"))
                     }) {
-                        Text("Try again")
+                        Text(stringResource(R.string.try_again))
                     }
                 }
 
